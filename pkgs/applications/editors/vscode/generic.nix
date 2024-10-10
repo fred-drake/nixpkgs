@@ -149,6 +149,7 @@ in
       exec = executableName + " --open-url %U";
       icon = "vs${executableName}";
       startupNotify = true;
+      startupWMClass = shortName;
       categories = [ "Utility" "TextEditor" "Development" "IDE" ];
       mimeTypes = [ "x-scheme-handler/vs${executableName}" ];
       keywords = [ "vscode" ];
@@ -167,7 +168,8 @@ in
     asar
     copyDesktopItems
     # override doesn't preserve splicing https://github.com/NixOS/nixpkgs/issues/132651
-    (buildPackages.wrapGAppsHook3.override { inherit (buildPackages) makeWrapper; })
+    # Has to use `makeShellWrapper` from `buildPackages` even though `makeShellWrapper` from the inputs is spliced because `propagatedBuildInputs` would pick the wrong one because of a different offset.
+    (buildPackages.wrapGAppsHook3.override { makeWrapper = buildPackages.makeShellWrapper; })
   ];
 
   dontBuild = true;
@@ -235,7 +237,10 @@ in
     let
       vscodeRipgrep =
         if stdenv.hostPlatform.isDarwin then
-          "Contents/Resources/app/node_modules.asar.unpacked/@vscode/ripgrep/bin/rg"
+          if lib.versionAtLeast version "1.94.0" then
+            "Contents/Resources/app/node_modules/@vscode/ripgrep/bin/rg"
+          else
+            "Contents/Resources/app/node_modules.asar.unpacked/@vscode/ripgrep/bin/rg"
         else
           "resources/app/node_modules/@vscode/ripgrep/bin/rg";
     in

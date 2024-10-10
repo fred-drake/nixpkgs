@@ -27,9 +27,9 @@
   makeFontsConf,
   vulkan-loader,
   envsubst,
-  nix-update-script,
+  gitUpdater,
   cargo-about,
-  testers,
+  versionCheckHook,
   zed-editor,
   buildFHSEnv,
 
@@ -86,13 +86,13 @@ let
 in
 rustPlatform.buildRustPackage rec {
   pname = "zed-editor";
-  version = "0.154.2";
+  version = "0.156.1";
 
   src = fetchFromGitHub {
     owner = "zed-industries";
     repo = "zed";
     rev = "refs/tags/v${version}";
-    hash = "sha256-DcSlsBwZW2RhzX74eNi0+VBwnxYLl22CbCbZrEOSiFQ=";
+    hash = "sha256-cu+XcFJ6VAP+7fqVhptnjDNpRkq/lRmJBCNkiy5Mka8=";
     fetchSubmodules = true;
   };
 
@@ -243,16 +243,17 @@ rustPlatform.buildRustPackage rec {
     runHook postInstall
   '';
 
+  nativeInstallCheckInputs = [
+    versionCheckHook
+  ];
+  versionCheckProgram = "${placeholder "out"}/bin/zeditor";
+  versionCheckProgramArg = [ "--version" ];
+  doInstallCheck = true;
+
   passthru = {
-    updateScript = nix-update-script {
-      extraArgs = [
-        "--version-regex"
-        "v(.*)"
-      ];
-    };
-    tests.version = testers.testVersion {
-      inherit version;
-      package = zed-editor;
+    updateScript = gitUpdater {
+      rev-prefix = "v";
+      ignoredVersions = "pre";
     };
     fhs = fhs { };
     fhsWithPackages = f: fhs { additionalPkgs = f; };
