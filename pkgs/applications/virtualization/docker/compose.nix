@@ -3,19 +3,21 @@
   buildGoModule,
   fetchFromGitHub,
   versionCheckHook,
+  nix-update-script,
 }:
-buildGoModule rec {
+buildGoModule (finalAttrs: {
   pname = "docker-compose";
-  version = "5.3.0";
+  version = "5.5.1";
+  __structuredAttrs = true;
 
   src = fetchFromGitHub {
     owner = "docker";
     repo = "compose";
-    tag = "v${version}";
-    hash = "sha256-Vq1CJcneoFYGlQjJgAZsPN8kR/xrnsF7abG7HACkdKA=";
+    tag = "v${finalAttrs.version}";
+    hash = "sha256-f4lIO9zSONHSQoZy80NSg3pcXyDfT5GXRcB3RkXC9sw=";
   };
 
-  vendorHash = "sha256-aEM+iHtwy/axoI5KwG2BnqSYKEwmuUPr5KcmdaO1mho=";
+  vendorHash = "sha256-8I+gPz7gdNKjuqLi0AnW4NjaONKxoYIhHZR064QYt6g=";
 
   nativeInstallCheckInputs = [ versionCheckHook ];
 
@@ -24,9 +26,8 @@ buildGoModule rec {
   '';
 
   ldflags = [
-    "-X github.com/docker/compose/v5/internal.Version=${version}"
+    "-X github.com/docker/compose/v5/internal.Version=${finalAttrs.version}"
     "-s"
-    "-w"
   ];
 
   doCheck = false;
@@ -40,11 +41,14 @@ buildGoModule rec {
     runHook postInstall
   '';
 
+  passthru.updateScript = nix-update-script { };
+
   meta = {
     description = "Docker CLI plugin to define and run multi-container applications with Docker";
     mainProgram = "docker-compose";
     homepage = "https://github.com/docker/compose";
+    changelog = "https://github.com/docker/compose/releases/tag/${finalAttrs.src.tag}";
     license = lib.licenses.asl20;
     maintainers = with lib.maintainers; [ airone01 ];
   };
-}
+})

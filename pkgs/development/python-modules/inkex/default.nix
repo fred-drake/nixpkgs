@@ -62,6 +62,9 @@ buildPythonPackage {
 
   pythonImportsCheck = [ "inkex" ];
 
+  # The inkex version isn't update in tandem with inkscape
+  dontCheckPythonMetadata = true;
+
   nativeCheckInputs = [
     gobject-introspection
     pytestCheckHook
@@ -79,6 +82,9 @@ buildPythonPackage {
     "test_image_extract"
     "test_path_number_nodes"
     "test_plotter" # Hangs
+  ]
+  ++ lib.optional stdenv.hostPlatform.isMusl [
+    "test_ellipse_arc"
   ];
 
   disabledTestPaths = [

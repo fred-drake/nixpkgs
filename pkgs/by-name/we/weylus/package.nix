@@ -28,7 +28,7 @@
   git,
   autoconf,
   libtool,
-  typescript,
+  typescript_5,
   wayland,
   libxkbcommon,
 }:
@@ -72,7 +72,7 @@ rustPlatform.buildRustPackage {
   nativeBuildInputs = [
     cmake
     git
-    typescript
+    typescript_5
     makeWrapper
   ]
   ++ lib.optionals stdenv.hostPlatform.isLinux [
@@ -111,7 +111,7 @@ rustPlatform.buildRustPackage {
     description = "Use your tablet as graphic tablet/touch screen on your computer";
     mainProgram = "weylus";
     homepage = "https://github.com/H-M-H/Weylus";
-    license = with lib.licenses; [ agpl3Only ];
+    license = lib.licenses.agpl3Only;
     maintainers = [ ];
   };
 }

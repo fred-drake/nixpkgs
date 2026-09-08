@@ -15,17 +15,19 @@
 
 buildPythonPackage (finalAttrs: {
   pname = "redisvl";
-  version = "0.22.0";
+  version = "0.26.0";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = "redis";
     repo = "redis-vl-python";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-0RgGNG6u6ZNraCd7YV10tajDYPHBIi7TbOYsbTR0tk8=";
+    hash = "sha256-za3ZFvB8/BiQrzjEC2iF33tpAI/l5ghZzoVpN5ISUco=";
   };
 
   build-system = [ hatchling ];
+
+  pythonRelaxDeps = [ "redis" ];
 
   dependencies = [
     numpy

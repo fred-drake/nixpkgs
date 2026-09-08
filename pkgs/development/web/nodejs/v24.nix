@@ -9,10 +9,16 @@
 }:
 
 let
-  buildNodejs = callPackage ./nodejs.nix {
-    inherit openssl;
-    python = python3;
-  };
+  buildNodejs = callPackage ./nodejs.nix (
+    {
+      inherit openssl;
+      python = python3;
+    }
+    // lib.optionalAttrs stdenv.hostPlatform.isDarwin {
+      # libcxx21 makes FD tracking unreliable on Darwin. Pinning to libcxx20:
+      stdenv = buildPackages.llvmPackages_20.libcxxStdenv;
+    }
+  );
 
   gypPatches =
     if stdenv.buildPlatform.isDarwin then
@@ -23,22 +29,13 @@ let
       [ ];
 in
 buildNodejs {
-  version = "24.16.0";
-  sha256 = "2ff84a6de70b6165290111b0fc656ded1ad207a799816fe720cc7c31232df30f";
+  version = "24.19.0";
+  sha256 = "f6d95e10a0431ee1067fc6aabe9f762908b4716dd35324e1ddb4b1466b76659f";
   patches =
-    (
-      if (stdenv.hostPlatform.emulatorAvailable buildPackages) then
-        [
-          ./configure-emulator.patch
-        ]
-      else
-        [
-          (fetchpatch2 {
-            url = "https://raw.githubusercontent.com/buildroot/buildroot/2f0c31bffdb59fb224387e35134a6d5e09a81d57/package/nodejs/nodejs-src/0003-include-obj-name-in-shared-intermediate.patch";
-            hash = "sha256-3g4aS+NmmUYNOYRNc6UMJKYoaTlpP5Knt9UHegx+o0Y=";
-          })
-        ]
-    )
+    (lib.optional (!(stdenv.hostPlatform.emulatorAvailable buildPackages)) (fetchpatch2 {
+      url = "https://raw.githubusercontent.com/buildroot/buildroot/2f0c31bffdb59fb224387e35134a6d5e09a81d57/package/nodejs/nodejs-src/0003-include-obj-name-in-shared-intermediate.patch";
+      hash = "sha256-3g4aS+NmmUYNOYRNc6UMJKYoaTlpP5Knt9UHegx+o0Y=";
+    }))
     ++ lib.optionals (stdenv.hostPlatform != stdenv.buildPlatform && stdenv.hostPlatform.isFreeBSD) [
       # This patch is concerning.
       # https://github.com/nodejs/node/issues/54576
@@ -57,11 +54,16 @@ buildNodejs {
       ./bin-sh-node-run-v22.patch
       ./use-nix-codesign.patch
 
-      # Patch for nghttp2 1.69 support
+      # TODO: remove when support for Ada 4.x has landed upstream
       (fetchpatch2 {
-        url = "https://github.com/nodejs/node/commit/4a32c00fb8dbe55c3bcf9ef43343968c9fe449e6.diff?full_index=1";
-        hash = "sha256-pex8ruwa4b/vWvfGA+nyN3JJP8NOturmwAQe4Rkd6nU=";
-        excludes = [ "tools/nix/*" ];
+        url = "https://github.com/nodejs/node/commit/eb1a49b0aec9e05cbb59f093d38f0a92818b7de1.patch?full_index=1";
+        hash = "sha256-LmLbsRZKkOGXzqDQxNrK/B8TGIrsr4pXIUEv3P6C9Sc=";
+        excludes = [ "deps/*" ];
+      })
+      (fetchpatch2 {
+        url = "https://github.com/nodejs/node/commit/064e2eee1ec7b17c4bc6e36befc2935eee80d0f7.patch?full_index=1";
+        hash = "sha256-RcmWiTpWYwA952nNmhaiq4zw/iuVAXFnuTeuB6ltR1U=";
+        includes = [ "test/fixtures/wpt/url/resources/urltestdata.json" ];
       })
     ]
     ++ gypPatches

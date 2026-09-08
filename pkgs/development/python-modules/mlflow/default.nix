@@ -27,7 +27,7 @@
 
 buildPythonPackage (finalAttrs: {
   pname = "mlflow";
-  version = "3.14.0";
+  version = "3.15.2";
   format = "wheel";
   __structuredAttrs = true;
 
@@ -39,7 +39,7 @@ buildPythonPackage (finalAttrs: {
     format = "wheel";
     dist = "py3";
     python = "py3";
-    hash = "sha256-2/d/fNtbXA7Fm0ZxxhcwsbkUtN/3ookuJnpUfLVFT1Y=";
+    hash = "sha256-eqWWZDUaqm9jR4zzwml3wYXbpg0ovKi5pRJb46K0MRw=";
   };
 
   # Nix-wrapped python populates sys.path via NIX_PYTHONPATH/site hooks,
@@ -52,6 +52,10 @@ buildPythonPackage (finalAttrs: {
 
   pythonRelaxDeps = [
     "cryptography"
+
+    # 3.14.0 dependency check fails with pandas >= 3.0. But the code changes required are minimal
+    # (strings are now `str` instead of `numpy.object`.)
+    "pandas"
   ];
 
   dependencies = [
